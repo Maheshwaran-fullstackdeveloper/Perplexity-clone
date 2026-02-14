@@ -78,7 +78,9 @@ export function AppSidebar() {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-          <Button className="rounded-full mx-4 mt-4">Sign Up</Button>
+          <Button className="rounded-full mx-4 mt-4 hover:cursor-pointer">
+            Sign Up
+          </Button>
         </SidebarContent>
         <SidebarGroup />
       </SidebarContent>

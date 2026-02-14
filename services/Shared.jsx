@@ -1,0 +1,80 @@
+export const AIModelsOptions = [
+  {
+    id: 1,
+    name: "StepFun 3.5 Flash",
+    desc: "Fast lightweight model optimized for quick responses",
+    model: "stepfun/step-3.5-flash:free",
+  },
+  {
+    id: 2,
+    name: "Trinity Large Preview",
+    desc: "Large preview model suitable for advanced reasoning tasks",
+    model: "arcee-ai/trinity-large-preview:free",
+  },
+  {
+    id: 3,
+    name: "NVIDIA Nemotron 3 Nano 30B",
+    desc: "High-parameter NVIDIA model for strong performance",
+    model: "nvidia/nemotron-3-nano-30b-a3b:free",
+  },
+  {
+    id: 4,
+    name: "Trinity Mini",
+    desc: "Compact Trinity model for lightweight tasks",
+    model: "arcee-ai/trinity-mini:free",
+  },
+  {
+    id: 5,
+    name: "NVIDIA Nemotron Nano 12B VL",
+    desc: "Vision-language capable NVIDIA model",
+    model: "nvidia/nemotron-nano-12b-v2-vl:free",
+  },
+  {
+    id: 6,
+    name: "NVIDIA Nemotron Nano 9B V2",
+    desc: "Efficient 9B parameter NVIDIA model",
+    model: "nvidia/nemotron-nano-9b-v2:free",
+  },
+  {
+    id: 7,
+    name: "GLM 4.5 Air",
+    desc: "Lightweight GLM model optimized for speed",
+    model: "z-ai/glm-4.5-air:free",
+  },
+  {
+    id: 8,
+    name: "Google Gemma 3N E2B",
+    desc: "Google’s instruction-tuned Gemma 3N E2B model",
+    model: "google/gemma-3n-e2b-it:free",
+  },
+  {
+    id: 9,
+    name: "DeepSeek R1",
+    desc: "Reasoning-focused DeepSeek model",
+    model: "deepseek/deepseek-r1-0528:free",
+  },
+  {
+    id: 10,
+    name: "Google Gemma 3N E4B",
+    desc: "Google’s enhanced Gemma 3N E4B model",
+    model: "google/gemma-3n-e4b-it:free",
+  },
+  {
+    id: 11,
+    name: "Google Gemma 3-4B",
+    desc: "Compact 4B parameter Gemma 3 model",
+    model: "google/gemma-3-4b-it:free",
+  },
+  {
+    id: 12,
+    name: "Google Gemma 3-12B",
+    desc: "Mid-sized 12B parameter Gemma 3 model",
+    model: "google/gemma-3-12b-it:free",
+  },
+  {
+    id: 13,
+    name: "Google Gemma 3-27B",
+    desc: "Large 27B parameter Gemma 3 model for advanced tasks",
+    model: "google/gemma-3-27b-it:free",
+  },
+];
