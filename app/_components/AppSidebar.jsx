@@ -20,6 +20,12 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  SignOutButton,
+  SignUpButton,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 
 const MenuOptions = [
   {
@@ -37,15 +43,11 @@ const MenuOptions = [
     icon: GalleryHorizontalEnd,
     path: "/library",
   },
-  {
-    title: "Sign In",
-    icon: LogIn,
-    path: "#",
-  },
 ];
 
 export function AppSidebar() {
   const path = usePathname();
+  const { user } = useUser();
   return (
     <Sidebar>
       <SidebarHeader className="flex items-center py-5">
@@ -78,22 +80,33 @@ export function AppSidebar() {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-          <Button className="rounded-full mx-4 mt-4 hover:cursor-pointer">
-            Sign Up
-          </Button>
+          {!user ? (
+            <SignUpButton mode="modal">
+              <Button className="rounded-full mx-4 mt-4 hover:cursor-pointer">
+                Sign Up
+              </Button>
+            </SignUpButton>
+          ) : (
+            <SignOutButton>
+              <Button className="rounded-full mx-4 mt-4 hover:cursor-pointer">
+                Log Out
+              </Button>
+            </SignOutButton>
+          )}
         </SidebarContent>
         <SidebarGroup />
       </SidebarContent>
       <SidebarFooter className={"bg-accent"}>
-        <div className="p-3">
+        <div className="p-3 flex flex-col">
           <h2 className="text-gray-500">Try Pro</h2>
           <p className="text-gray-400 text-sm">
             Upgrade to Pro for Image Upload, Smarter AI and more...
           </p>
-          <Button variant="secondary" className={"text-gray-500"}>
+          <Button variant="secondary" className={"text-gray-500 mb-3"}>
             <SquareArrowOutUpRight />
             Learn More
           </Button>
+          {user && <UserButton />}
         </div>
       </SidebarFooter>
     </Sidebar>
