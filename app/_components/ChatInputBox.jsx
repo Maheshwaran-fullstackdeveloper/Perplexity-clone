@@ -1,7 +1,10 @@
+"use client";
 import Image from "next/image";
-import React from "react";
+import React, { use } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  ArrowRight,
   Atom,
   AudioLines,
   Cpu,
@@ -21,8 +24,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AIModelsOptions } from "@/services/Shared";
+import supabase from "@/services/supabase";
+import { useUser } from "@clerk/nextjs";
+import { uuid } from "uuidv4";
 
 function ChatInputBox() {
+  const { user } = useUser();
+  const [userSearchInput, setUserSearchInput] = useState();
+  const [searchType, setSearchType] = useState("search");
+  const [loading, setLoading] = useState(false);
+
+  const onSearchQuery = async () => {
+    setLoading(true);
+    const libid = uuid();
+    const { data } = await supabase
+      .from("Library")
+      .insert([
+        {
+          searchInput: userSearchInput,
+          userEmail: user?.primaryEmailAddress?.emailAddress,
+          type: searchType,
+          libid,
+        },
+      ])
+      .select();
+    setLoading(false);
+  };
+
   return (
     <div className="flex flex-col h-screen items-center justify-center w-full">
       <Image
@@ -41,6 +69,7 @@ function ChatInputBox() {
                 type="text"
                 placeholder="Ask anything..."
                 className="w-full p-4 outline-none"
+                onChange={(e) => setUserSearchInput(e.target.value)}
               />
             </TabsContent>
             <TabsContent value="research">
@@ -48,18 +77,21 @@ function ChatInputBox() {
                 type="text"
                 placeholder="Research anything..."
                 className="w-full p-4 outline-none"
+                onChange={(e) => setUserSearchInput(e.target.value)}
               />
             </TabsContent>
             <TabsList>
               <TabsTrigger
                 value="search"
                 className={"text-primary hover:cursor-pointer"}
+                onClick={() => setSearchType("search")}
               >
                 <SearchCheck /> Search
               </TabsTrigger>
               <TabsTrigger
                 value="research"
                 className={"text-primary hover:cursor-pointer"}
+                onClick={() => setSearchType("research")}
               >
                 <Atom /> Research
               </TabsTrigger>
@@ -94,8 +126,17 @@ function ChatInputBox() {
             <Button variant="ghost" className={"cursor-pointer"}>
               <Mic className="text-gray-500 h-5 w-5" />
             </Button>
-            <Button className={"cursor-pointer"}>
-              <AudioLines className="text-white h-5 w-5" />
+            <Button
+              className={"cursor-pointer"}
+              onClick={() => {
+                userSearchInput ? onSearchQuery() : null;
+              }}
+            >
+              {!userSearchInput ? (
+                <AudioLines className="text-white h-5 w-5" />
+              ) : (
+                <ArrowRight className="text-white h-5 w-5" disabled={loading} />
+              )}
             </Button>
           </div>
         </div>
