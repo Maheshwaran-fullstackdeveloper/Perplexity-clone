@@ -19,7 +19,7 @@ function Provider({ children }) {
       .eq("email", user.primaryEmailAddress.emailAddress);
 
     if (!Users || Users.length === 0) {
-      const { data, error } = await supabase
+      const { data, error: insertError } = await supabase
         .from("Users")
         .insert([
           {
@@ -28,9 +28,12 @@ function Provider({ children }) {
           },
         ])
         .select();
-      setUserDetails(data[0]);
+      if (data?.[0]) {
+        setUserDetails(data[0]);
+      }
+    } else {
+      setUserDetails(Users[0]);
     }
-    setUserDetails(Users[0]);
   };
   return (
     <UserDetailContext.Provider value={{ userDetails, setUserDetails }}>

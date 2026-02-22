@@ -26,17 +26,19 @@ import {
 import { AIModelsOptions } from "@/services/Shared";
 import supabase from "@/services/supabase";
 import { useUser } from "@clerk/nextjs";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation";
 
 function ChatInputBox() {
   const { user } = useUser();
   const [userSearchInput, setUserSearchInput] = useState();
   const [searchType, setSearchType] = useState("search");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const onSearchQuery = async () => {
     setLoading(true);
-    const libid = uuid();
+    const libid = uuidv4();
     const { data } = await supabase
       .from("Library")
       .insert([
@@ -49,6 +51,7 @@ function ChatInputBox() {
       ])
       .select();
     setLoading(false);
+    router.push("/search/" + libid);
   };
 
   return (

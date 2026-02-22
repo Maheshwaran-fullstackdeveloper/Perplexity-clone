@@ -1,6 +1,10 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { AppSidebar } from "./_components/AppSidebar";
 import { ClerkProvider } from "@clerk/nextjs";
 import Provider from "./Provider";
@@ -29,8 +33,10 @@ export default function RootLayout({ children }) {
         >
           <SidebarProvider>
             <AppSidebar />
-            <SidebarTrigger />
-            <Provider>{children}</Provider>
+            <SidebarInset>
+              <SidebarTrigger className="ml-2 mt-2" />
+              <Provider>{children}</Provider>
+            </SidebarInset>
           </SidebarProvider>
         </body>
       </html>
