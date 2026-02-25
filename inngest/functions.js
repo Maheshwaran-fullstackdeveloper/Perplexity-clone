@@ -32,7 +32,7 @@ Structure the response as:
 (Short explanatory paragraph)
 
 ## Sources
-- Include the provided link
+- Provide the title and the link as a clickable markdown link (e.g., [Title](URL))
 
 Rules:
 - No repetition
