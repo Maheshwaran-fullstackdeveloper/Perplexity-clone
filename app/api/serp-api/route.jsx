@@ -3,7 +3,7 @@ import axios from "axios";
 
 export async function POST(req) {
   try {
-    const { searchInput } = await req.json();
+    const { searchInput, type } = await req.json();
 
     if (!searchInput) {
       return NextResponse.json(
@@ -14,13 +14,13 @@ export async function POST(req) {
 
     const result = await axios.get("https://serpapi.com/search.json", {
       params: {
-        engine: "google",
+        engine: type === "news" ? "google_news" : "google",
         q: searchInput,
         api_key: process.env.SERP_API_KEY,
         google_domain: "google.com",
         hl: "en",
         gl: "us",
-        num: 10,
+        num: 15,
       },
     });
 

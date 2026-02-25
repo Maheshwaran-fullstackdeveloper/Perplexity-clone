@@ -121,6 +121,8 @@ function DisplayResult({ searchInputrecord }) {
     }
   };
 
+  const pollTimeoutRef = useRef(null);
+
   const GenerateAIResp = async (
     formattedRSearchResp,
     recordId,
@@ -133,8 +135,12 @@ function DisplayResult({ searchInputrecord }) {
         recordId: recordId,
       });
 
+      // Clear any existing poll before starting a new one
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+      }
+
       // Poll Supabase directly for the aiResp update
-      // This is more reliable than polling Inngest status
       const pollDb = async () => {
         try {
           const { data, error } = await supabase
@@ -145,11 +151,13 @@ function DisplayResult({ searchInputrecord }) {
 
           if (data?.aiResp) {
             await GetSearchrecords();
+            pollTimeoutRef.current = null;
           } else {
-            setTimeout(pollDb, 2000);
+            pollTimeoutRef.current = setTimeout(pollDb, 2000);
           }
         } catch (err) {
           console.error("Error polling database:", err);
+          pollTimeoutRef.current = setTimeout(pollDb, 5000); // Retry later on error
         }
       };
 
@@ -158,6 +166,15 @@ function DisplayResult({ searchInputrecord }) {
       console.error("Error in GenerateAIResp:", error);
     }
   };
+
+  // Cleanup effect to prevent memory leaks on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const GetSearchrecords = async () => {
     let { data: Library, error } = await supabase

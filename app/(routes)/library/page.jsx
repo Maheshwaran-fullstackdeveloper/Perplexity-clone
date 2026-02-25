@@ -26,7 +26,7 @@ function Library() {
 
   return (
     <div className="mt-20 px-10 md:px-20 lg:px-36 xl:px-56">
-      <h2 className="font-bold text-2xl">Library</h2>
+      <h2 className="font-bold text-2xl text-gray-650">Library</h2>
       <div className="mt-7">
         {libraryHistory.map((item, index) => (
           <div
@@ -36,7 +36,7 @@ function Library() {
           >
             <div className="flex justify-between">
               <div>
-                <h2 className="font-bold">{item.searchInput}</h2>
+                <h2 className="font-bold text-gray-700">{item.searchInput}</h2>
                 <p className="text-xs text-gray-500">
                   {moment(item.created_at).fromNow()}
                 </p>
