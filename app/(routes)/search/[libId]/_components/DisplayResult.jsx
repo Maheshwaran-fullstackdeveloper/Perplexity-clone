@@ -7,122 +7,163 @@ import {
 } from "lucide-react";
 import AnswerDisplay from "./AnswerDisplay";
 import axios from "axios";
-import { SEARCH_RESULT } from "@/services/Shared";
 import supabase from "@/services/supabase";
 import { useParams } from "next/navigation";
+import ImageList from "./ImageList";
+import SourceListTab from "./SourceListTab";
 
 const tabs = [
   { label: "Answer", icon: LucideSparkles },
   { label: "Images", icon: LucideImage },
-  { label: "Videos", icon: LucideVideo },
   { label: "Sources", icon: LucideList, badge: 10 },
 ];
 
 function DisplayResult({ searchInputrecord }) {
   const [activeTab, setActiveTab] = useState(tabs[0].label);
-  const [searchResult, setSearchResult] = useState(SEARCH_RESULT);
+  const [searchResult, setSearchResult] = useState(null);
   const { libId } = useParams();
+  const isSearchStarted = useRef(false);
 
   const GetSearchApiResult = async () => {
-    const searchResp = SEARCH_RESULT;
-    // const formattedRSearchResp = searchResp?.knowledge_graph
-    //   ? [searchResp.knowledge_graph].map((item) => ({
-    //       title: item?.title,
-    //       description: item?.description,
-    //       long_name: item?.type,
-    //       img: item?.header_images?.[0]?.image,
-    //       url: item?.profiles[0]?.link,
-    //       thumbnail: item?.profiles[0]?.image,
-    //     }))
-    //   : [];
-    const kg = searchResp?.knowledge_graph;
-    const formattedRSearchResp = [
-      // 1. Entity (Knowledge Graph Main)
-      kg && {
-        title: kg?.title,
-        description: kg?.description,
-        long_name: kg?.type,
-        url: kg?.profiles?.[0]?.link,
-        img: kg?.header_images?.[0]?.image,
-      },
-      // 2. Web Results
-      ...(searchResp?.web_results?.map((item) => ({
-        title: item?.title,
-        description: item?.snippet,
-        long_name: "Web Result",
-        url: item?.link,
-        img: item?.thumbnail,
-      })) || []),
-      // 3. Knowledge Graph Sources
-      ...(kg?.sources?.map((item) => {
-        let hostname = "";
-        try {
-          hostname = item?.link ? new URL(item.link).hostname : "";
-        } catch (e) {
-          console.error("Error parsing URL:", item?.link);
-        }
-        return {
-          type: "source",
-          title: item?.name,
-          description: item?.snippet,
-          long_name: item?.displayed_link || "Source",
-          url: item?.link,
-          img: hostname
-            ? `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`
-            : null,
-        };
-      }) || []),
-      // 4. Organic Results from searchResp
-      ...(searchResp?.organic_results?.map((item) => ({
-        title: item?.title,
-        description: item?.snippet,
-        long_name: item?.source || item?.displayed_link,
-        url: item?.link,
-        img: item?.favicon,
-      })) || []),
-    ]
-      .filter((item) => item?.title && item?.url)
-      .slice(0, 8);
-
-    const { data, error } = await supabase
-      .from("Chats")
-      .insert([
-        {
-          libId: libId,
-          searchResult: formattedRSearchResp,
-          userSearchInput: searchInputrecord?.searchInput,
+    try {
+      const resp = await axios.post("/api/serp-api", {
+        searchInput: searchInputrecord?.searchInput,
+      });
+      const searchResp = resp.data;
+      const kg = searchResp?.knowledge_graph;
+      const formattedRSearchResp = [
+        // 1. Entity (Knowledge Graph Main)
+        kg && {
+          title: kg?.title,
+          description: kg?.description,
+          long_name: kg?.type,
+          url: kg?.profiles?.[0]?.link,
+          img: kg?.header_images?.[0]?.image,
         },
-      ])
-      .select();
+        // 2. Web Results
+        ...(searchResp?.web_results?.map((item) => ({
+          title: item?.title,
+          description: item?.snippet,
+          long_name: "Web Result",
+          url: item?.link,
+          img: item?.thumbnail,
+        })) || []),
+        // 3. Knowledge Graph Sources
+        ...(kg?.sources?.map((item) => {
+          let hostname = "";
+          try {
+            hostname = item?.link ? new URL(item.link).hostname : "";
+          } catch (e) {
+            console.error("Error parsing URL:", item?.link);
+          }
+          return {
+            type: "source",
+            title: item?.name,
+            description: item?.snippet,
+            long_name: item?.displayed_link || "Source",
+            url: item?.link,
+            img: hostname
+              ? `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`
+              : null,
+          };
+        }) || []),
+        // 4. Organic Results from searchResp
+        ...(searchResp?.organic_results?.map((item) => ({
+          title: item?.title,
+          description: item?.snippet,
+          long_name: item?.source || item?.displayed_link,
+          url: item?.link,
+          img: item?.favicon,
+        })) || []),
+        // 5. Inline Videos
+        ...(searchResp?.inline_videos?.map((item) => ({
+          type: "video",
+          title: item.title,
+          url: item.link,
+          thumbnail: item.thumbnail,
+          channel: item.channel,
+          platform: item.platform,
+        })) || []),
+      ]
+        .filter((item) => item?.title && item?.url)
+        .slice(0, 15);
 
-    if (data?.[0]) {
-      await GenerateAIResp(formattedRSearchResp, data[0].id);
+      const { data, error } = await supabase
+        .from("Chats")
+        .insert([
+          {
+            libId: libId,
+            searchResult: formattedRSearchResp,
+            userSearchInput: searchInputrecord?.searchInput,
+          },
+        ])
+        .select();
+
+      if (data?.[0]) {
+        await GetSearchrecords();
+        await GenerateAIResp(formattedRSearchResp, data[0].id);
+      }
+    } catch (error) {
+      console.error("Error in GetSearchApiResult:", error);
     }
   };
 
   const GenerateAIResp = async (formattedRSearchResp, recordId) => {
-    const result = await axios.post("/api/llm-model", {
-      searchInput: searchInputrecord?.searchInput,
-      searchResult: formattedRSearchResp,
-      recordId: recordId,
-    });
-    const runId = result.data;
-    const interval = setInterval(async () => {
-      const runResp = await axios.post("/api/get-inngest-status", {
-        runId: runId,
+    try {
+      await axios.post("/api/llm-model", {
+        searchInput: searchInputrecord?.searchInput,
+        searchResult: formattedRSearchResp,
+        recordId: recordId,
       });
-      if (runResp?.data?.data?.[0]?.status === "completed") {
-        clearInterval(interval);
-      }
-    }, 1000);
 
-    return result;
+      // Poll Supabase directly for the aiResp update
+      // This is more reliable than polling Inngest status
+      const pollDb = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("Chats")
+            .select("aiResp")
+            .eq("id", recordId)
+            .single();
+
+          if (data?.aiResp) {
+            await GetSearchrecords();
+          } else {
+            setTimeout(pollDb, 2000);
+          }
+        } catch (err) {
+          console.error("Error polling database:", err);
+        }
+      };
+
+      pollDb();
+    } catch (error) {
+      console.error("Error in GenerateAIResp:", error);
+    }
+  };
+
+  const GetSearchrecords = async () => {
+    let { data: Library, error } = await supabase
+      .from("Library")
+      .select("*,Chats(*)")
+      .eq("libid", libId);
+
+    if (Library?.[0]) {
+      setSearchResult(Library[0]);
+    }
   };
 
   useEffect(() => {
-    searchInputrecord?.Chats?.length === 0 && GetSearchApiResult();
-    setSearchResult(searchInputrecord);
-    console.log(searchInputrecord);
+    if (!searchInputrecord) return;
+
+    if (searchInputrecord?.Chats?.length === 0) {
+      if (!isSearchStarted.current) {
+        isSearchStarted.current = true;
+        GetSearchApiResult();
+      }
+    } else {
+      setSearchResult(searchInputrecord);
+    }
   }, [searchInputrecord]);
 
   return (
@@ -151,11 +192,11 @@ function DisplayResult({ searchInputrecord }) {
                   <span>{label}</span>
                   {badge && (
                     <span className="ml-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-bold">
-                      {badge}
+                      {chat?.searchResult?.length || badge}
                     </span>
                   )}
                   {activeTab === label && (
-                    <span className="absolute -bottom-[13px] left-0 w-full h-[2px] bg-black rounded-full"></span>
+                    <span className="absolute -bottom-3.25 left-0 w-full h-0.5 bg-black rounded-full"></span>
                   )}
                 </button>
               ))}
@@ -169,10 +210,10 @@ function DisplayResult({ searchInputrecord }) {
           <div className="w-full">
             {activeTab === tabs[0].label ? (
               <AnswerDisplay chat={chat} />
-            ) : activeTab === tabs[3].label ? (
-              <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <SourceList webResult={chat?.searchResult} />
-              </div>
+            ) : activeTab === tabs[1].label ? (
+              <ImageList chat={chat} />
+            ) : activeTab === tabs[2].label ? (
+              <SourceListTab chat={chat} />
             ) : null}
           </div>
         </div>

@@ -22,18 +22,16 @@ function AnswerDisplay({ chat }) {
           <h2 className="font-bold text-base">Answer</h2>
         </div>
         <div className="prose max-w-none">
-          <DisplaySummary aiResp={chat?.aiResp} />
-          {/* {chat?.aiResp ? (
-            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-base animate-in fade-in duration-700">
-              {chat?.aiResp}
-            </div>
+          {chat?.aiResp ? (
+            <DisplaySummary aiResp={chat?.aiResp} />
           ) : (
-            <div className="flex flex-col gap-3 animate-pulse">
+            <div className="flex flex-col gap-3 animate-pulse py-4">
               <div className="h-4 bg-gray-100 rounded w-full"></div>
               <div className="h-4 bg-gray-100 rounded w-11/12"></div>
               <div className="h-4 bg-gray-100 rounded w-4/5"></div>
+              <div className="h-3 bg-gray-50 rounded w-1/2 mt-2"></div>
             </div>
-          )} */}
+          )}
         </div>
       </div>
     </div>

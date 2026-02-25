@@ -12,7 +12,7 @@ function SourceList({ webResult }) {
           className="flex flex-col p-3 bg-accent rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200 group h-full justify-between"
         >
           <div className="flex items-center gap-2 mb-2 shrink-0">
-            {item?.img ? (
+            {typeof item?.img === "string" && item.img.trim() !== "" ? (
               <Image
                 src={item?.img}
                 alt="Logo"
