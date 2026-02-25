@@ -38,30 +38,50 @@ function DisplayResult({ searchInputrecord }) {
       const searchResp = resp.data;
       const kg = searchResp?.knowledge_graph;
       const formattedRSearchResp = [
-        // 1. Entity (Knowledge Graph Main)
-        kg && {
+        // 1. Entity Main Image (Knowledge Graph)
+        ...(kg?.header_images?.map((img) => ({
+          type: "knowledge_image",
           title: kg?.title,
           description: kg?.description,
-          long_name: kg?.type,
-          url: kg?.profiles?.[0]?.link,
-          img: kg?.header_images?.[0]?.image,
-        },
-        // 2. Web Results
+          long_name: kg?.type || "Image",
+          url: kg?.knowledge_graph_search_link || kg?.profiles?.[0]?.link,
+          img: img?.image,
+        })) || []),
+
+        // 2. Entity Overview Images
+        ...(kg?.overview?.map((item) => ({
+          type: "knowledge_image",
+          title: item.name,
+          url: item.link,
+          img: item.image,
+          long_name: "Overview",
+        })) || []),
+
+        // 3. Profiles
+        ...(kg?.profiles?.map((item) => ({
+          type: "profile_image",
+          title: item.name,
+          url: item.link,
+          img: item.image,
+          long_name: "Profile",
+        })) || []),
+
+        // 4. Web Results (often have thumbnails)
         ...(searchResp?.web_results?.map((item) => ({
+          type: "web_result",
           title: item?.title,
           description: item?.snippet,
-          long_name: "Web Result",
+          long_name: item?.source || "Web Result",
           url: item?.link,
           img: item?.thumbnail,
         })) || []),
-        // 3. Knowledge Graph Sources
+
+        // 5. Knowledge Graph Sources (Favicons/Logos)
         ...(kg?.sources?.map((item) => {
           let hostname = "";
           try {
             hostname = item?.link ? new URL(item.link).hostname : "";
-          } catch (e) {
-            console.error("Error parsing URL:", item?.link);
-          }
+          } catch (e) {}
           return {
             type: "source",
             title: item?.name,
@@ -73,15 +93,27 @@ function DisplayResult({ searchInputrecord }) {
               : null,
           };
         }) || []),
-        // 4. Organic Results from searchResp
+
+        // 6. Organic Results (Favicons/Logos)
         ...(searchResp?.organic_results?.map((item) => ({
+          type: "source",
           title: item?.title,
           description: item?.snippet,
           long_name: item?.source || item?.displayed_link,
           url: item?.link,
           img: item?.favicon,
         })) || []),
-        // 5. Inline Videos
+
+        // 7. Inline Images (Pure Image Results)
+        ...(searchResp?.inline_images?.map((item) => ({
+          type: "image",
+          title: item.title,
+          url: item.link,
+          img: item.thumbnail || item.link,
+          source: item.source,
+        })) || []),
+
+        // 8. Inline Videos
         ...(searchResp?.inline_videos?.map((item) => ({
           type: "video",
           title: item.title,
@@ -89,10 +121,11 @@ function DisplayResult({ searchInputrecord }) {
           thumbnail: item.thumbnail,
           channel: item.channel,
           platform: item.platform,
+          img: item.thumbnail, // Alias for unified filtering
         })) || []),
       ]
         .filter((item) => item?.title && item?.url)
-        .slice(0, 15);
+        .slice(0, 25);
 
       const { data, error } = await supabase
         .from("Chats")
