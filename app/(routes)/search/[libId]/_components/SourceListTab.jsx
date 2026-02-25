@@ -35,9 +35,9 @@ function SourceListTab({ chat, loadingSearch }) {
         >
           <div className="flex items-center gap-2">
             <div className="shrink-0 w-5 text-center">{index + 1}.</div>
-            {typeof item.img === "string" && item.img.trim() !== "" && (
+            {(item.favicon || item.img) && (
               <Image
-                src={item.img}
+                src={item.favicon || item.img}
                 alt={item.title || "Source favicon"}
                 width={20}
                 height={20}

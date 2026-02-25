@@ -44,7 +44,7 @@ function DisplayResult({ searchInputrecord }) {
           description: kg?.description,
           long_name: kg?.type,
           url: kg?.profiles?.[0]?.link,
-          img: kg?.header_images?.[0]?.image,
+          img: kg?.header_images?.[0]?.image || kg?.thumbnail,
         },
         // 2. Web Results
         ...(searchResp?.web_results?.map((item) => ({
@@ -62,15 +62,17 @@ function DisplayResult({ searchInputrecord }) {
           } catch (e) {
             console.error("Error parsing URL:", item?.link);
           }
+          const favicon = hostname
+            ? `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`
+            : null;
           return {
             type: "source",
             title: item?.name,
             description: item?.snippet,
             long_name: item?.displayed_link || "Source",
             url: item?.link,
-            img: hostname
-              ? `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`
-              : null,
+            img: favicon, // Fallback for source tab
+            favicon: favicon,
           };
         }) || []),
         // 4. Organic Results from searchResp
@@ -79,20 +81,36 @@ function DisplayResult({ searchInputrecord }) {
           description: item?.snippet,
           long_name: item?.source || item?.displayed_link,
           url: item?.link,
-          img: item?.favicon,
+          img: item?.thumbnail || item?.favicon,
+          favicon: item?.favicon,
         })) || []),
-        // 5. Inline Videos
+        // 5. Inline Images
+        ...(searchResp?.inline_images?.map((item) => ({
+          title: item?.title || "Image",
+          url: item?.link,
+          img: item?.thumbnail,
+          long_name: "Image",
+        })) || []),
+        // 6. Image Results (from dedicated image search results if present)
+        ...(searchResp?.images_results?.map((item) => ({
+          title: item?.title || "Image",
+          url: item?.link,
+          img: item?.thumbnail,
+          long_name: "Image Result",
+        })) || []),
+        // 7. Inline Videos
         ...(searchResp?.inline_videos?.map((item) => ({
           type: "video",
           title: item.title,
           url: item.link,
+          img: item.thumbnail, // Standardize on 'img' for ImageList
           thumbnail: item.thumbnail,
           channel: item.channel,
           platform: item.platform,
         })) || []),
       ]
-        .filter((item) => item?.title && item?.url)
-        .slice(0, 15);
+        .filter((item) => item?.title && (item?.url || item?.img))
+        .slice(0, 20);
 
       const { data, error } = await supabase
         .from("Chats")
