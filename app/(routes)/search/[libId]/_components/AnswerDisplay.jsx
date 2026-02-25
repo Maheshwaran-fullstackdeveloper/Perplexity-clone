@@ -3,7 +3,7 @@ import React from "react";
 import SourceList from "./SourceList";
 import DisplaySummary from "./DisplaySummary";
 
-function AnswerDisplay({ chat }) {
+function AnswerDisplay({ chat, loadingSearch }) {
   return (
     <div className="mt-10 flex flex-col gap-6 font-sans">
       {/* Sources Section */}
@@ -12,7 +12,10 @@ function AnswerDisplay({ chat }) {
           <LucideList className="w-4 h-4 text-gray-700" />
           <h2 className="font-bold text-base">Sources</h2>
         </div>
-        <SourceList webResult={chat?.searchResult} />
+        <SourceList
+          webResult={chat?.searchResult}
+          loadingSearch={loadingSearch}
+        />
       </div>
 
       {/* Answer Section */}

@@ -1,9 +1,24 @@
 import Image from "next/image";
 import React from "react";
 
-function SourceList({ webResult }) {
+function SourceList({ webResult, loadingSearch }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+      {loadingSearch &&
+        (!webResult || webResult.length === 0) &&
+        [1, 2, 3, 4].map((item, index) => (
+          <div
+            key={index}
+            className="w-full h-24 p-3 rounded-lg bg-gray-50 animate-pulse border border-gray-100 flex flex-col gap-2"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-gray-200"></div>
+              <div className="w-12 h-2 rounded bg-gray-200"></div>
+            </div>
+            <div className="w-full h-3 rounded bg-gray-200"></div>
+            <div className="w-3/4 h-3 rounded bg-gray-200"></div>
+          </div>
+        ))}
       {webResult?.map((item, index) => (
         <a
           href={item?.url}

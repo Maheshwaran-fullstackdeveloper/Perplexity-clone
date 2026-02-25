@@ -23,9 +23,11 @@ function DisplayResult({ searchInputrecord }) {
   const [searchResult, setSearchResult] = useState(null);
   const { libId } = useParams();
   const isSearchStarted = useRef(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
   const GetSearchApiResult = async () => {
     try {
+      setLoadingSearch(true);
       const resp = await axios.post("/api/serp-api", {
         searchInput: searchInputrecord?.searchInput,
       });
@@ -101,6 +103,7 @@ function DisplayResult({ searchInputrecord }) {
 
       if (data?.[0]) {
         await GetSearchrecords();
+        setLoadingSearch(false);
         await GenerateAIResp(formattedRSearchResp, data[0].id);
       }
     } catch (error) {
@@ -156,13 +159,14 @@ function DisplayResult({ searchInputrecord }) {
   useEffect(() => {
     if (!searchInputrecord) return;
 
+    // Always set searchResult to show the query and UI structure
+    setSearchResult(searchInputrecord);
+
     if (searchInputrecord?.Chats?.length === 0) {
       if (!isSearchStarted.current) {
         isSearchStarted.current = true;
         GetSearchApiResult();
       }
-    } else {
-      setSearchResult(searchInputrecord);
     }
   }, [searchInputrecord]);
 
@@ -192,7 +196,7 @@ function DisplayResult({ searchInputrecord }) {
                   <span>{label}</span>
                   {badge && (
                     <span className="ml-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-bold">
-                      {chat?.searchResult?.length || badge}
+                      {chat?.searchResult?.length || 0}
                     </span>
                   )}
                   {activeTab === label && (
@@ -209,15 +213,64 @@ function DisplayResult({ searchInputrecord }) {
           </div>
           <div className="w-full">
             {activeTab === tabs[0].label ? (
-              <AnswerDisplay chat={chat} />
+              <AnswerDisplay chat={chat} loadingSearch={loadingSearch} />
             ) : activeTab === tabs[1].label ? (
               <ImageList chat={chat} />
             ) : activeTab === tabs[2].label ? (
-              <SourceListTab chat={chat} />
+              <SourceListTab chat={chat} loadingSearch={loadingSearch} />
             ) : null}
           </div>
         </div>
       ))}
+
+      {/* Show Skeleton for the initial empty state while searching */}
+      {loadingSearch &&
+        (!searchResult?.Chats || searchResult.Chats.length === 0) && (
+          <div className="w-full mb-16">
+            <h1 className="text-3xl font-bold text-gray-600">
+              {searchResult?.searchInput}
+            </h1>
+            <div className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-3 mt-8">
+              <div className="flex items-center flex-wrap gap-6">
+                {tabs.map(({ label, icon: Icon }) => (
+                  <div
+                    key={label}
+                    className={`flex items-center gap-1.5 text-sm font-medium py-1 ${
+                      activeTab === label ? "text-black" : "text-gray-400"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{label}</span>
+                    {activeTab === label && (
+                      <span className="absolute -bottom-3.25 left-0 w-full h-0.5 bg-black rounded-full"></span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="ml-auto text-[11px] font-medium text-gray-400 uppercase tracking-widest hidden sm:flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                Searching...
+              </div>
+            </div>
+            <div className="w-full">
+              {activeTab === tabs[0].label ? (
+                <AnswerDisplay chat={null} loadingSearch={true} />
+              ) : activeTab === tabs[2].label ? (
+                <SourceListTab chat={null} loadingSearch={true} />
+              ) : (
+                <div className="flex gap-5 flex-wrap mt-6">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="w-48 h-48 bg-gray-100 animate-pulse rounded-xl"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
     </div>
   );
 }

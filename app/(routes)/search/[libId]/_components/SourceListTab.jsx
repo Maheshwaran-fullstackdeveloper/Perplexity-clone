@@ -1,10 +1,31 @@
 import Image from "next/image";
 import React from "react";
 
-function SourceListTab({ chat }) {
+function SourceListTab({ chat, loadingSearch }) {
   return (
     <div className="mt-4 gap-2 items-center">
-      {chat.searchResult.map((item, index) => (
+      {loadingSearch &&
+        (!chat?.searchResult || chat.searchResult.length === 0) && (
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3, 4, 5].map((_, index) => (
+              <div
+                key={index}
+                className="p-2 border-b animate-pulse flex flex-col gap-2"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-4 bg-gray-100 rounded"></div>
+                  <div className="w-5 h-5 bg-gray-100 rounded-full"></div>
+                  <div className="w-24 h-3 bg-gray-100 rounded"></div>
+                </div>
+                <div className="ml-7 flex flex-col gap-2">
+                  <div className="w-3/4 h-5 bg-gray-100 rounded"></div>
+                  <div className="w-1/2 h-3 bg-gray-50 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      {chat?.searchResult?.map((item, index) => (
         <a
           href={item.url}
           target="_blank"
